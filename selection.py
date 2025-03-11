@@ -10,7 +10,19 @@ def landing_page():
 def getdata():
     try:
         data = request.json  # Expect JSON data
-        array = list(map(int, data.get("numbers", "").split()))
+        # array = list(map(int, data.get("numbers", "").split()))
+
+
+        if not data or "numbers" not in data or not data["numbers"].strip():
+            return jsonify({"error": "Input cannot be empty"}), 400
+        
+        new_array = data.get("numbers", "").split()
+        array=[]
+        for i in new_array:
+            if "." in i:
+                array.append(float(i))
+            else:
+                array.append(int(i))
 
         steps = []  # Store sorting steps
         count=0
@@ -34,7 +46,7 @@ def getdata():
         return jsonify(steps)  # Return sorting steps
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": "Enter only integer or float values with space seperated"}), 400
 
 if __name__ == "__main__":
     app.run(debug=True)
