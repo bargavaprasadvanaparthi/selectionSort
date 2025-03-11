@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selection Sort Visualizer</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            background-color: #f4f4f4; 
+            padding: 20px; 
+        }
+        h1 { 
+            color: #333; 
+        }
+        form {
+            margin: 20px auto;
+        }
+        input {
+            padding: 10px;
+            width: 250px;
+            border: 2px solid #007BFF;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .array-item {
+            display: inline-block;
+            margin: 5px;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            background: lightblue;
+            border-radius: 5px;
+            transition: all 0.3s ease-in-out;
+        }
+        /* Animation for swapping numbers */
+        @keyframes swapEffect {
+            0% { transform: scale(1); background: #ffcc00; }
+            50% { transform: scale(1.7); background: #ff5733; color: white; }
+            100% { transform: scale(1.2); background: #ffcc00; }
+        }
+        .swapping {
+            animation: swapEffect 0.5s ease-in-out;
+        }
+        .log {
+            margin-top: 20px;
+            text-align: left;
+            width: 50%;
+            margin: auto;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+        }
+        .log p {
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Selection Sort Visualizer</h1>
+
+    <form id="sortForm">
+        <input type="text" id="numbers" name="numbers" placeholder="Enter space-separated numbers"><br>
+        <button type="submit">Start Sorting</button>
+    </form>
+
+    <form id="restart">
+        <button type="submit">Restart</button>
+    </form>
+
+    <div class="array-container" id="arrayContainer"></div>
+    <div class="log" id="log"></div>
+    
+    <script>
+        document.getElementById("sortForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+    
+            const numbers = document.getElementById("numbers").value;
+            const response = await fetch("/getdata", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ numbers: numbers })
+            });
+    
+            const steps = await response.json();
+    
+            if (steps.error) {
+                alert(steps.error);
+                return;
+            }
+    
+            const arrayContainer = document.getElementById("arrayContainer");
+            const logContainer = document.getElementById("log");
+    
+            arrayContainer.innerHTML = "";
+            logContainer.innerHTML = "";
+    
+            function displayArray(arr, highlightIndex1 = null, highlightIndex2 = null) {
+                arrayContainer.innerHTML = arr.map((num, index) => {
+                    let className = "array-item";
+                    if (index === highlightIndex1 || index === highlightIndex2) {
+                        className += " swapping"; // Apply animation effect
+                    }
+                    return `<div class="${className}">${num}</div>`;
+                }).join("");
+            }
+    
+            async function visualizeSorting() {
+                if (steps.alreadySort) {
+                    logContainer.innerHTML += `<p style="color: green;">${steps.alreadySort}</p>`;
+                    return;
+                }
+    
+                for (let step of steps) {
+                    const { array, message, highlight1, highlight2 } = step;
+    
+                    displayArray(array, highlight1, highlight2); // Highlight swapping elements
+                    logContainer.innerHTML += `<p>${message}</p>`;
+    
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // 1-sec delay for visualization
+                }
+    
+                logContainer.innerHTML += `<p style="color: green; font-weight: bold;">✅ Sorting Completed!</p>`;
+                arrayContainer.style.opacity = "0.9";
+            }
+    
+            visualizeSorting();
+        });
+    
+        document.getElementById("restart").addEventListener("submit", () => {
+            location.reload();
+        });
+    </script>
+    
+</body>
+</html>
